@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float mouseSensitivity = 10f;
 
+    // refereces
+    private Camera mainCamera;
     private new Rigidbody rigidbody;
 
     private Vector2 movementDirection;
@@ -15,11 +17,15 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        mainCamera = Camera.main;
         rigidbody = GetComponent<Rigidbody>();
     }
 
     private void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         movementDirection = Vector2.zero;
         cameraRotation = Vector2.zero;
     }
@@ -63,8 +69,16 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
-        rigidbody.linearVelocity = new (movementDirection.x * speed, rigidbody.linearVelocity.y, movementDirection.y * speed);
+        // Using the camera's right and forward vectors ensures movement is relative to the camera's direction.
+        Vector3 moveDirection = (mainCamera.transform.right * movementDirection.x + mainCamera.transform.forward * movementDirection.y).normalized;
+
+        // Preserve the vertical component of the rigidbody's velocity (gravity, jump) while applying horizontal movement.
+        moveDirection.y = rigidbody.linearVelocity.y;
+
+        // Apply the movement direction to the rigidbody's linear velocity, scaling it by the movement speed.
+        rigidbody.linearVelocity = moveDirection * speed;
     }
+
 
     private void Look()
     {
